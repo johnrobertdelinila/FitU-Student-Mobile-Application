@@ -2,7 +2,6 @@ package com.example.poseexercise.views.fragment
 
 import Announcement
 import AnnouncementAdapter
-import AssignedExercise
 import AssignedExerciseAdapter
 import android.app.AlertDialog
 import android.os.Bundle
@@ -19,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.poseexercise.R
@@ -28,6 +28,7 @@ import com.example.poseexercise.data.database.AppRepository
 import com.example.poseexercise.data.plan.Plan
 import com.example.poseexercise.data.results.RecentActivityItem
 import com.example.poseexercise.data.results.WorkoutResult
+import com.example.poseexercise.data.exercise.AssignedExercise
 import com.example.poseexercise.util.MemoryManagement
 import com.example.poseexercise.util.MyApplication
 import com.example.poseexercise.util.MyUtils
@@ -38,6 +39,7 @@ import com.example.poseexercise.views.activity.MainActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.android.gms.tasks.Tasks
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -45,7 +47,6 @@ import java.text.SimpleDateFormat
 import java.util.Collections
 import java.util.Date
 import java.util.Locale
-import kotlin.math.min
 
 class HomeFragment : Fragment(), PlanAdapter.ItemListener, MemoryManagement {
     @Suppress("PropertyName")
@@ -74,6 +75,7 @@ class HomeFragment : Fragment(), PlanAdapter.ItemListener, MemoryManagement {
     private lateinit var assignedExerciseAdapter: AssignedExerciseAdapter
     private lateinit var noAssignedExercisesText: TextView
     private lateinit var assignedExercisesLoadingIndicator: ProgressBar
+    private lateinit var totalAssignedExercisesText: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -96,12 +98,18 @@ class HomeFragment : Fragment(), PlanAdapter.ItemListener, MemoryManagement {
         progressText = view.findViewById(R.id.exercise_left)
         recyclerView = view.findViewById(R.id.today_plans)
         noPlanTV = view.findViewById(R.id.no_plan)
+        totalAssignedExercisesText = view.findViewById(R.id.totalAssignedExercisesText)
+        
+        // Initialize adapter before setting it to RecyclerView
+        adapter = PlanAdapter(requireContext(), findNavController())
+        adapter.setListener(this)
         
         // Set up RecyclerView
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        adapter = PlanAdapter(requireContext())
-        recyclerView.adapter = adapter
-        adapter.setListener(this)
+        recyclerView.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = this@HomeFragment.adapter  // Use this@HomeFragment to refer to the Fragment's adapter
+            isNestedScrollingEnabled = true
+        }
         
         // Initially hide both views until we have data
         recyclerView.visibility = View.GONE
@@ -136,7 +144,11 @@ class HomeFragment : Fragment(), PlanAdapter.ItemListener, MemoryManagement {
         loadAnnouncements()
 
         setupAssignedExercisesSection(view)
-        loadAssignedExercises()
+        fetchAllClassRostersForStudent()
+
+        fetchInstructorName("knownInstructorId") { instructorName ->
+            Log.d(TAG, "Hardcoded instructor name: $instructorName")
+        }
     }
 
     private fun loadPlans() {
@@ -326,6 +338,7 @@ class HomeFragment : Fragment(), PlanAdapter.ItemListener, MemoryManagement {
                     }
             }
             .addOnFailureListener { e ->
+                Log.e(TAG, "Error loading instructor details: ${e.message}")
                 showError("Error loading instructor details: ${e.message}")
             }
     }
@@ -422,86 +435,187 @@ class HomeFragment : Fragment(), PlanAdapter.ItemListener, MemoryManagement {
         assignedExercisesRecyclerView.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = assignedExerciseAdapter
+            isNestedScrollingEnabled = true
         }
     }
 
-    private fun loadAssignedExercises() {
+    private fun fetchAllClassRostersForStudent() {
         val currentUser = auth.currentUser ?: return
         
+        // Show loading indicator
         assignedExercisesLoadingIndicator.visibility = View.VISIBLE
-        assignedExercisesRecyclerView.visibility = View.GONE
-        noAssignedExercisesText.visibility = View.GONE
-
-        // First get the class roster
+        
         db.collection("classRosters")
             .whereArrayContains("students", currentUser.uid)
             .get()
             .addOnSuccessListener { rosters ->
-                if (!rosters.isEmpty) {
-                    val roster = rosters.documents[0]
-                    val instructorId = roster.getString("instructorId")
-                    val rosterId = roster.id
-                    
-                    if (instructorId != null) {
-                        fetchAssignedExercises(rosterId, instructorId)
-                    } else {
-                        showAssignedExercisesError("Instructor not found")
-                    }
-                } else {
+                if (rosters.isEmpty) {
                     showNoAssignedExercises()
+                    return@addOnSuccessListener
+                }
+
+                // First fetch all instructor details
+                val instructorIds = rosters.mapNotNull { it.getString("instructorId") }.distinct()
+                fetchInstructorDetails(instructorIds) { instructorMap ->
+                    fetchExerciseAssignments(instructorMap)
                 }
             }
             .addOnFailureListener { e ->
-                showAssignedExercisesError("Error loading roster: ${e.message}")
+                Log.e(TAG, "Error fetching class rosters: ${e.message}")
+                showAssignedExercisesError("Failed to load class information")
             }
     }
 
-    private fun fetchAssignedExercises(rosterId: String, instructorId: String) {
-        // First get the instructor details
-        db.collection("instructors")
-            .document(instructorId)
+    private fun fetchInstructorDetails(instructorIds: List<String>, callback: (Map<String, String>) -> Unit) {
+        if (instructorIds.isEmpty()) {
+            callback(emptyMap())
+            return
+        }
+
+        Log.d(TAG, "Fetching details for instructors: $instructorIds")
+        
+        val instructorMap = mutableMapOf<String, String>()
+        var completedQueries = 0
+
+        instructorIds.forEach { instructorId ->
+            Log.d(TAG, "Fetching instructor: $instructorId")
+            db.collection("instructors")
+                .document(instructorId)
+                .get()
+                .addOnSuccessListener { document ->
+                    synchronized(instructorMap) {
+                        val name = document.getString("fullName")
+                        Log.d(TAG, "Fetched instructor $instructorId: $name")
+                        instructorMap[instructorId] = name ?: "Unknown Instructor"
+                        completedQueries++
+                        
+                        if (completedQueries == instructorIds.size) {
+                            Log.d(TAG, "Completed fetching all instructors. Map: $instructorMap")
+                            callback(instructorMap)
+                        }
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.e(TAG, "Error fetching instructor $instructorId: ${e.message}")
+                    synchronized(instructorMap) {
+                        instructorMap[instructorId] = "Unknown Instructor"
+                        completedQueries++
+                        
+                        if (completedQueries == instructorIds.size) {
+                            callback(instructorMap)
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun fetchExerciseAssignments(instructorMap: Map<String, String>) {
+        val currentUser = auth.currentUser ?: return
+        val currentDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+            .format(Date())
+
+        db.collection("exerciseAssignments")
+            .whereGreaterThanOrEqualTo("dueDate", currentDate)
             .get()
-            .addOnSuccessListener { instructorDoc ->
-                val instructorName = instructorDoc.getString("fullName") ?: "Unknown Instructor"
-                
-                // Get current timestamp in ISO 8601 format
-                val currentDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-                    .format(Date())
-                
-                // Then fetch exercises that are not past due
-                db.collection("exerciseAssignments")
-                    .whereEqualTo("classRosterId", rosterId)
-                    .whereEqualTo("instructorId", instructorId)
-                    .whereGreaterThanOrEqualTo("dueDate", currentDate)  // Only get assignments due now or in the future
-                    .get()
-                    .addOnSuccessListener { documents ->
-                        val exercises = documents.mapNotNull { doc ->
-                            try {
-                                // Include the document ID in the AssignedExercise object
-                                doc.toObject(AssignedExercise::class.java).copy(
-                                    id = doc.id,  // Set the document ID here
-                                    instructorName = instructorName
-                                )
-                            } catch (e: Exception) {
-                                Log.e(TAG, "Error parsing exercise: ${e.message}")
-                                null
-                            }
+            .addOnSuccessListener { documents ->
+                val exercises = documents.mapNotNull { doc ->
+                    try {
+                        // Get both the base exercise and its completion status
+                        val exercise = doc.toObject(AssignedExercise::class.java)
+                        val isCompleted = doc.getBoolean("isCompleted") ?: false
+                        
+                        // Create initial exercise with completion status
+                        val initialExercise = exercise.copy(
+                            id = doc.id,
+                            isCompleted = isCompleted  // Set the completion status here
+                        )
+                        
+                        // Set instructor name
+                        initialExercise.instructorName = instructorMap[initialExercise.instructorId] ?: "Unknown Instructor"
+                        
+                        // Fetch attempt count for this exercise
+                        fetchAttemptCount(doc.id, currentUser.uid) { attemptCount ->
+                            val updatedExercise = initialExercise.copy(
+                                attemptCount = attemptCount
+                            )
+                            // Update UI with the exercise including attempt count
+                            updateExerciseInUI(updatedExercise)
                         }
                         
-                        hideAssignedExercisesLoading()
-                        if (exercises.isEmpty()) {
-                            showNoAssignedExercises()
-                        } else {
-                            showAssignedExercises(exercises)
-                        }
+                        initialExercise
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error parsing exercise: ${e.message}")
+                        null
                     }
-                    .addOnFailureListener { e ->
-                        showAssignedExercisesError("Error loading exercises: ${e.message}")
-                    }
+                }
+                
+                // Initial display with completion status
+                val sortedExercises = exercises.sortedBy { it.isCompleted }
+                if (sortedExercises.isEmpty()) {
+                    showNoAssignedExercises()
+                } else {
+                    showAssignedExercises(sortedExercises)
+                }
             }
             .addOnFailureListener { e ->
-                showAssignedExercisesError("Error loading instructor details: ${e.message}")
+                Log.e(TAG, "Error fetching exercises: ${e.message}")
+                showAssignedExercisesError("Failed to load exercises")
             }
+    }
+
+    private fun fetchAttemptCount(exerciseId: String, userId: String, callback: (Int) -> Unit) {
+        db.collection("exerciseAssignments")
+            .document(exerciseId)
+            .collection("performedExercises")
+            .whereEqualTo("uid", userId)
+            .get()
+            .addOnSuccessListener { documents ->
+                callback(documents.size())
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Error fetching attempt count: ${e.message}")
+                callback(0)
+            }
+    }
+
+    private fun updateExerciseInUI(exercise: AssignedExercise) {
+        val currentExercises = (assignedExerciseAdapter.getExercises() ?: listOf()).toMutableList()
+        val index = currentExercises.indexOfFirst { it.id == exercise.id }
+        if (index != -1) {
+            currentExercises[index] = exercise
+            val sortedExercises = currentExercises.sortedBy { it.isCompleted }
+            showAssignedExercises(sortedExercises)
+        }
+    }
+
+    private fun showExerciseDialog(exercise: AssignedExercise, view: View) {
+        if (exercise.attemptCount >= 3) {
+            // Show max attempts reached dialog
+            AlertDialog.Builder(requireContext())
+                .setTitle("Maximum Attempts Reached")
+                .setMessage("You have already attempted this exercise 3 times. Please contact your instructor for assistance.")
+                .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+                .show()
+            return
+        }
+
+        // Your existing dialog code with attempt count info
+        val dialogBuilder = AlertDialog.Builder(requireContext())
+        dialogBuilder.setTitle("Start Exercise")
+        
+        val formattedDueDate = formatDueDate(exercise.dueDate)
+        
+        val message = """
+            Exercise: ${exercise.exerciseName}
+            Repetitions: ${exercise.repetitions}
+            Instructor: ${exercise.instructorName}
+            Due Date: $formattedDueDate
+            Attempts: ${exercise.attemptCount}/3
+        """.trimIndent()
+        
+        dialogBuilder.setMessage(message)
+        
+        // Rest of your existing dialog code...
     }
 
     private fun hideAssignedExercisesLoading() {
@@ -512,11 +626,19 @@ class HomeFragment : Fragment(), PlanAdapter.ItemListener, MemoryManagement {
         hideAssignedExercisesLoading()
         assignedExercisesRecyclerView.visibility = View.GONE
         noAssignedExercisesText.visibility = View.VISIBLE
+        totalAssignedExercisesText.visibility = View.GONE
     }
 
     private fun showAssignedExercises(exercises: List<AssignedExercise>) {
         assignedExercisesRecyclerView.visibility = View.VISIBLE
         noAssignedExercisesText.visibility = View.GONE
+        
+        // Update counts for the header
+        val totalExercises = exercises.size
+        val completedExercises = exercises.count { it.isCompleted }
+        totalAssignedExercisesText.text = "Assigned Exercises: ${completedExercises}/${totalExercises} completed"
+        totalAssignedExercisesText.visibility = View.VISIBLE
+        
         assignedExerciseAdapter.updateExercises(exercises)
     }
 
@@ -524,5 +646,36 @@ class HomeFragment : Fragment(), PlanAdapter.ItemListener, MemoryManagement {
         hideAssignedExercisesLoading()
         showNoAssignedExercises()
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun fetchInstructorName(instructorId: String, callback: (String) -> Unit) {
+        db.collection("instructors")
+            .document(instructorId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val instructorName = document.getString("fullName") ?: "Unknown Instructor"
+                    Log.d(TAG, "Fetched instructor name: $instructorName for ID: $instructorId")
+                    callback(instructorName)
+                } else {
+                    Log.e(TAG, "Instructor document does not exist for ID: $instructorId")
+                    callback("Unknown Instructor")
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Error fetching instructor name: ${e.message}")
+                callback("Unknown Instructor")
+            }
+    }
+
+    private fun formatDueDate(dateString: String): String {
+        return try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+            val date = inputFormat.parse(dateString)
+            val outputFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+            date?.let { outputFormat.format(it) } ?: dateString
+        } catch (e: Exception) {
+            dateString
+        }
     }
 }

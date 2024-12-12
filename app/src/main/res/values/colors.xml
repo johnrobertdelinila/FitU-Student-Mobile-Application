@@ -27,4 +27,10 @@
     <color name="orange">#FF9800</color>  <!-- Material Design Orange -->
     <color name="yellow">#FFEB3B</color>  <!-- Material Design Yellow -->
     <color name="lightGreen">#8BC34A</color>  <!-- Material Design Light Green -->
+
+    <!-- Exercise completion colors -->
+    <color name="completed_exercise_background">#F5F5F5</color>
+
+    <!-- New color -->
+    <color name="lightGray">#E0E0E0</color>
 </resources>

@@ -1,6 +1,6 @@
+package com.example.poseexercise.data.exercise
+
 import com.google.firebase.Timestamp
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 data class AssignedExercise(
     val id: String = "",
@@ -9,6 +9,8 @@ data class AssignedExercise(
     val dueDate: String = "",
     val exerciseName: String = "",
     val instructorId: String = "",
-    val instructorName: String = "",
-    val repetitions: Int = 0
+    var instructorName: String = "",
+    val repetitions: Int = 0,
+    var isCompleted: Boolean = false,
+    var attemptCount: Int = 0
 ) 

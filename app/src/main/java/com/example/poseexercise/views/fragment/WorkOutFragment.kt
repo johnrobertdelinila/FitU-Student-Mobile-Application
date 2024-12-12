@@ -390,7 +390,7 @@ class WorkOutFragment : Fragment(), MemoryManagement {
             // Stop triggering classification process
             cameraViewModel.triggerClassification.value = false
 
-            saveExerciseToFirestore(getString(R.string.noWorkoutResultDisplay), 0, currentTimer ?: "0")
+//            saveExerciseToFirestore(getString(R.string.noWorkoutResultDisplay), 0, currentTimer ?: "0")
 
             // Navigate to completed fragment
             Navigation.findNavController(requireView())

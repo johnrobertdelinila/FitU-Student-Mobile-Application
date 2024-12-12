@@ -13,7 +13,7 @@ import androidx.core.os.bundleOf
 import androidx.navigation.NavController
 import androidx.recyclerview.widget.RecyclerView
 import com.example.poseexercise.R
-import com.example.poseexercise.data.plan.Exercise
+import com.example.poseexercise.data.plan.ExerciseType
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.chip.Chip
 
@@ -27,20 +27,15 @@ import com.google.android.material.chip.Chip
  * @param navController The NavController for navigating to other fragments.
  */
 class ExerciseAdapter internal constructor(
-    context: Context,
+    private val context: Context,
     private val navController: NavController
 ) :
     RecyclerView.Adapter<ExerciseAdapter.MyViewHolder>(), Filterable {
 
-    private var exerciseList: List<Exercise> = emptyList()
-    var exerciseFilterList = mutableListOf<Exercise>()
+    private var exercises = listOf<ExerciseType>()
 
     // This class defines the ViewHolder object for each item in the RecyclerView
     inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        init {
-            exerciseFilterList = exerciseList as MutableList<Exercise>
-        }
-
         val cardView: MaterialCardView = itemView.findViewById(R.id.card)
         val name: TextView = itemView.findViewById(R.id.exercise_name)
         val image: ImageView = itemView.findViewById(R.id.exercise_image)
@@ -58,36 +53,40 @@ class ExerciseAdapter internal constructor(
     }
 
     override fun getItemCount(): Int {
-        return exerciseFilterList.size
+        return exercises.size
     }
 
     // This method binds the data to the ViewHolder object
     // for each item in the RecyclerView
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        val currentExercise = exerciseFilterList[position]
+        val currentExercise = exercises[position]
         holder.name.text = currentExercise.name
-        currentExercise.image?.let { holder.image.setImageResource(it) }
+        
+        // Set image if available, otherwise use placeholder
+        currentExercise.image?.let { 
+            holder.image.setImageResource(it)
+        } ?: run {
+            holder.image.setImageResource(R.drawable.exercise_placeholder)
+        }
+        
         holder.level.text = currentExercise.level
         holder.calorieBurned.text = "${currentExercise.calorie} kCal"
         holder.level.isCheckable = false
 
         // Set a click event listener for the CardView
         holder.cardView.setOnClickListener {
-            // Create a bundle to hold data that need to pass to next fragment
             val bundle = bundleOf(
                 "exerciseName" to currentExercise.name,
                 "caloriesPerRep" to currentExercise.calorie
             )
-            // Navigate to another fragment using the NavController
             navController.navigate(R.id.action_planStepOneFragment_to_planStepTwoFragment, bundle)
         }
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun setExercises(exercises: List<Exercise>) {
-        this.exerciseList = exercises
-        exerciseFilterList = exercises as MutableList<Exercise>
+    fun setExercises(newExercises: List<ExerciseType>) {
+        exercises = newExercises
         notifyDataSetChanged()
     }
 
@@ -95,26 +94,21 @@ class ExerciseAdapter internal constructor(
         return object : Filter() {
             override fun performFiltering(constraint: CharSequence?): FilterResults {
                 val charSearch = constraint.toString()
-                exerciseFilterList = if (charSearch.isEmpty()) {
-                    exerciseList as MutableList<Exercise>
-                } else {
-                    val resultList = mutableListOf<Exercise>()
-                    for (row in exerciseList) {
-                        if (row.level.lowercase().contains(charSearch.lowercase())) {
-                            resultList.add(row)
-                        }
+                val resultList = mutableListOf<ExerciseType>()
+                for (row in exercises) {
+                    if (row.level.lowercase().contains(charSearch.lowercase())) {
+                        resultList.add(row)
                     }
-                    resultList
                 }
                 val filterResults = FilterResults()
-                filterResults.values = exerciseFilterList
+                filterResults.values = resultList
                 return filterResults
             }
 
             @SuppressLint("NotifyDataSetChanged")
             @Suppress("UNCHECKED_CAST")
             override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
-                exerciseFilterList = results?.values as MutableList<Exercise>
+                exercises = results?.values as List<ExerciseType>
                 notifyDataSetChanged()
             }
         }

@@ -8,57 +8,71 @@ Object containing constants related to exercise data
 object Constants {
 
     // Function to get a list of predefined exercises with their details
-    fun getExerciseList(): List<Exercise> {
+    fun getExerciseList(): List<ExerciseType> {
         return listOf(
-            Exercise(
-                id = 1,
-                name = "Push up",
-                image = R.drawable.push_up,
-                calorie = 3.2,
-                level = "Intermediate"
+            ExerciseType(
+                name = "Push-up",
+                category = "Strength",
+                caloriesPerRep = 2.5,
+                image = R.drawable.push_up
             ),
-            Exercise(
-                id = 2,
-                name = "Lunge",
-                image = R.drawable.reverse_lunges,
-                calorie = 3.0,
-                level = "Beginner"
-            ),
-            Exercise(
-                id = 3,
+            ExerciseType(
                 name = "Squat",
-                image = R.drawable.squat,
-                calorie = 3.8,
-                level = "Beginner"
+                category = "Strength",
+                caloriesPerRep = 3.0,
+                image = R.drawable.squat
             ),
-            Exercise(
-                id = 4,
-                name = "Sit up",
-                image = R.drawable.sit_ups,
-                calorie = 5.0,
-                level = "Advance"
+            ExerciseType(
+                name = "Sit-up",
+                category = "Strength",
+                caloriesPerRep = 2.0,
+                image = R.drawable.sit_ups
             ),
-            Exercise(
-                id = 5,
-                name = "Chest press",
-                image = R.drawable.chest_press,
-                calorie = 7.0,
-                level = "Advance"
+            ExerciseType(
+                name = "Deadlift",
+                category = "Strength",
+                caloriesPerRep = 4.0,
+                image = R.drawable.dead_lift
             ),
-            Exercise(
-                id = 6,
-                name = "Dead lift",
-                image = R.drawable.dead_lift,
-                calorie = 10.0,
-                level = "Advance"
+            ExerciseType(
+                name = "Chest Press",
+                category = "Strength",
+                caloriesPerRep = 3.5,
+                image = R.drawable.chest_press
             ),
-            Exercise(
-                id = 7,
-                name = "Shoulder press",
-                image = R.drawable.shoulder_press,
-                calorie = 9.0,
-                level = "Advance"
+            ExerciseType(
+                name = "Shoulder Press",
+                category = "Strength",
+                caloriesPerRep = 3.0,
+                image = R.drawable.shoulder_press
             ),
+            ExerciseType(
+                name = "Lunges",
+                category = "Strength",
+                caloriesPerRep = 2.5,
+                image = R.drawable.reverse_lunges
+            ),
+            ExerciseType(
+                name = "Warrior Yoga",
+                category = "Yoga",
+                caloriesPerRep = 1.5,
+                image = R.drawable.warrior_yoga_pose
+            ),
+            ExerciseType(
+                name = "Tree Yoga",
+                category = "Yoga",
+                caloriesPerRep = 1.0,
+                image = R.drawable.tree_yoga_pose
+            )
         )
     }
 }
+
+data class ExerciseType(
+    val name: String,
+    val category: String,
+    val caloriesPerRep: Double,
+    val image: Int? = null,
+    val level: String = category,
+    val calorie: Double = caloriesPerRep
+)

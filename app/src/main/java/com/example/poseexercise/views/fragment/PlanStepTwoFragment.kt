@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.CheckedTextView
 import android.widget.EditText
 import android.widget.ListView
 import android.widget.Toast
@@ -49,6 +50,7 @@ class PlanStepTwoFragment : Fragment(), MemoryManagement {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
         // Get all the layout info
         val exerciseEditText = view.findViewById<EditText>(R.id.exercise_name)
         val repeatEditText = view.findViewById<EditText>(R.id.repeat_count)
@@ -57,68 +59,98 @@ class PlanStepTwoFragment : Fragment(), MemoryManagement {
 
         // Set the default value for the exercise
         exerciseEditText.setText(mExerciseName)
+        
         // Set the min and max value for Repeat count
         setEditTextLimit(repeatEditText, 1, 100)
-        // Option list for days in week
+        
+        // Setup days list
+        setupDaysList(listOfDays)
+        
+        // Saving plan
+        addPlanButton.setOnClickListener {
+            handleSavePlan(repeatEditText, view)
+        }
+    }
+
+    private fun setupDaysList(listOfDays: ListView) {
+        // Create adapter with custom layout
         val listAdapter = ArrayAdapter(
-            this.requireContext(),
+            requireContext(),
             android.R.layout.simple_list_item_multiple_choice,
             days
         )
         listOfDays.adapter = listAdapter
-        // Get the selected days
-        listOfDays.setOnItemClickListener { _, _, position, _ ->
-            val element = listAdapter.getItem(position)// The item that was clicked
-            if (element != null) {
-                if (element in selectedDays) {
-                    selectedDays.remove(element)
-                } else {
-                    selectedDays.add(element)
-                }
-            }
-        }
-        // Saving plan
-        addPlanButton.setOnClickListener {
-            if (repeatEditText.text.isEmpty() || selectedDays.isEmpty()) {
-                showErrorMessage()
+        listOfDays.choiceMode = ListView.CHOICE_MODE_MULTIPLE
+
+        // Handle item clicks
+        listOfDays.setOnItemClickListener { _, view, position, _ ->
+            val day = days[position]
+            val isChecked = !selectedDays.contains(day)
+            
+            if (isChecked) {
+                selectedDays.add(day)
             } else {
-                addPlanViewModel = ViewModelProvider(this)[AddPlanViewModel::class.java]
-                val days = selectedDays.joinToString(" ") { it.uppercase() }
-                val repeatCount = repeatEditText.text.toString()
-                
-                Log.d("PlanStepTwo", "Creating plan with days: $days")
-                
-                val newPlan = Plan(
-                    id = 0,
-                    exercise = mExerciseName,
-                    kcal = mKcal,
-                    repeatCount = repeatCount.toInt(),
-                    selectedDays = days,
-                    completed = false
-                )
-                
-                lifecycleScope.launch {
-                    try {
-                        addPlanViewModel.insert(newPlan)
-                        Log.d("PlanStepTwo", "Plan saved successfully: $newPlan")
-                        withContext(Dispatchers.Main) {
-                            view.findNavController()
-                                .navigate(R.id.action_planStepTwoFragment_to_homeFragment)
-                        }
-                    } catch (e: Exception) {
-                        Log.e("PlanStepTwo", "Error saving plan", e)
-                    }
+                selectedDays.remove(day)
+            }
+            
+            // Update checkbox state
+            (view as? CheckedTextView)?.isChecked = isChecked
+            
+            Log.d("PlanStepTwo", "Selected days: $selectedDays")
+        }
+
+        // Prevent ListView from capturing all touch events
+        listOfDays.setOnTouchListener { v, event ->
+            v.parent.requestDisallowInterceptTouchEvent(true)
+            v.onTouchEvent(event)
+        }
+    }
+
+    private fun handleSavePlan(repeatEditText: EditText, view: View) {
+        if (repeatEditText.text.isEmpty()) {
+            showErrorMessage("Please enter number of repetitions")
+            return
+        }
+        
+        if (selectedDays.isEmpty()) {
+            showErrorMessage("Please select at least one day")
+            return
+        }
+
+        addPlanViewModel = ViewModelProvider(this)[AddPlanViewModel::class.java]
+        val days = selectedDays.joinToString(" ") { it.uppercase() }
+        val repeatCount = repeatEditText.text.toString()
+        
+        Log.d("PlanStepTwo", "Creating plan with days: $days")
+        
+        val newPlan = Plan(
+            id = 0,
+            exercise = mExerciseName,
+            kcal = mKcal,
+            repeatCount = repeatCount.toInt(),
+            selectedDays = days,
+            completed = false
+        )
+        
+        lifecycleScope.launch {
+            try {
+                addPlanViewModel.insert(newPlan)
+                Log.d("PlanStepTwo", "Plan saved successfully: $newPlan")
+                withContext(Dispatchers.Main) {
+                    view.findNavController()
+                        .navigate(R.id.action_planStepTwoFragment_to_homeFragment)
+                }
+            } catch (e: Exception) {
+                Log.e("PlanStepTwo", "Error saving plan", e)
+                withContext(Dispatchers.Main) {
+                    showErrorMessage("Failed to save plan")
                 }
             }
         }
     }
 
-    private fun showErrorMessage() {
-        Toast.makeText(
-            activity,
-            "Please fill the form",
-            Toast.LENGTH_SHORT
-        ).show()
+    private fun showErrorMessage(message: String) {
+        Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
     }
 
     private fun setEditTextLimit(editText: EditText, minValue: Int, maxValue: Int) {

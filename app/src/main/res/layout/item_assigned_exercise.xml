@@ -2,6 +2,8 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/exerciseCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
@@ -33,12 +35,13 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/exerciseName"
+                android:id="@+id/exerciseNameText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="@color/black"/>
+                android:textColor="@color/black"
+                tools:text="Exercise Name"/>
 
             <TextView
                 android:id="@+id/exerciseDetails"
@@ -46,23 +49,44 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:textColor="@color/gray"
-                android:textSize="14sp"/>
+                android:textSize="14sp"
+                tools:text="Exercise Details"/>
 
             <TextView
-                android:id="@+id/instructorName"
+                android:id="@+id/instructorNameText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:textColor="@color/primaryColor"
-                android:textSize="14sp"/>
+                android:textSize="14sp"
+                tools:text="Instructor: John Doe"/>
 
             <TextView
-                android:id="@+id/dueDate"
+                android:id="@+id/repetitionsText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/gray"
+                android:textSize="14sp"
+                tools:text="Repetitions: 10"/>
+
+            <TextView
+                android:id="@+id/dueDateText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:textColor="@color/gray"
-                android:textSize="12sp"/>
+                android:textSize="12sp"
+                tools:text="Due: Jan 1, 2024"/>
+
+            <TextView
+                android:id="@+id/statusText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp"
+                android:textSize="14sp"
+                tools:text="Completed"/>
         </LinearLayout>
     </LinearLayout>
 

@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.navigation.NavController
 import androidx.recyclerview.widget.RecyclerView
 import com.example.poseexercise.R
 import com.example.poseexercise.data.plan.Plan
@@ -22,24 +23,26 @@ import com.example.poseexercise.posedetector.classification.PoseClassifierProces
 import com.example.poseexercise.util.MyUtils.Companion.databaseNameToClassification
 import java.util.Collections
 
-class PlanAdapter internal constructor(context: Context) :
-    RecyclerView.Adapter<PlanAdapter.ViewHolder>() {
+class PlanAdapter internal constructor(
+    private val context: Context,
+    private val navController: NavController
+) : RecyclerView.Adapter<PlanAdapter.MyViewHolder>() {
     private val inflater: LayoutInflater = LayoutInflater.from(context)
     private var planList: MutableList<Plan> = mutableListOf()
     private lateinit var listener: ItemListener
 
 
-    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val workoutImage: ImageView = itemView.findViewById(R.id.imageView)
         val workoutName: TextView = itemView.findViewById(R.id.exercise_title)
         val repeat: TextView = itemView.findViewById(R.id.exercise_rep)
         val deleteButton: Button = itemView.findViewById(R.id.delete_button)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
         // Inflate the item view from the layout
         val itemView = inflater.inflate(R.layout.plan_list_item, parent, false)
-        return ViewHolder(itemView)
+        return MyViewHolder(itemView)
     }
 
     override fun getItemCount(): Int {
@@ -48,13 +51,11 @@ class PlanAdapter internal constructor(context: Context) :
     }
 
     @SuppressLint("SetTextI18n", "NotifyDataSetChanged")
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         // Bind data to the item views
         val currentPlan = planList[position]
         holder.workoutImage.setImageResource(
-            getDrawableResourceIdExercise(
-                databaseNameToClassification(currentPlan.exercise)
-            )
+            getDrawableResourceIdExercise(currentPlan.exercise)
         )
         holder.workoutName.text = currentPlan.exercise
         holder.repeat.text = "${currentPlan.repeatCount} ${currentPlan.exercise} a day"
@@ -84,22 +85,23 @@ class PlanAdapter internal constructor(context: Context) :
     }
 
     /**
-     * List of yoga images
+     * List of exercise images
      */
     private val exerciseImages = mapOf(
-        SQUATS_CLASS to R.drawable.squat,
-        LUNGES_CLASS to R.drawable.reverse_lunges,
-        SITUP_UP_CLASS to R.drawable.sit_ups,
-        PUSHUPS_CLASS to R.drawable.push_up,
-        CHEST_PRESS_CLASS to R.drawable.chest_press,
-        DEAD_LIFT_CLASS to R.drawable.dead_lift,
-        SHOULDER_PRESS_CLASS to R.drawable.shoulder_press
+        "Push-up" to R.drawable.push_up,
+        "Squat" to R.drawable.squat,
+        "Sit-up" to R.drawable.sit_ups,
+        "Deadlift" to R.drawable.dead_lift,
+        "Chest Press" to R.drawable.chest_press,
+        "Shoulder Press" to R.drawable.shoulder_press,
+        "Lunges" to R.drawable.reverse_lunges,
+        "Warrior Yoga" to R.drawable.warrior_yoga_pose,
+        "Tree Yoga" to R.drawable.tree_yoga_pose
     )
 
     private fun getDrawableResourceIdExercise(exerciseKey: String): Int {
         // Get the image resource ID for the given exercise key
-        return exerciseImages[exerciseKey]
-            ?: throw IllegalArgumentException("Invalid yoga pose key: $exerciseKey")
+        return exerciseImages[exerciseKey] ?: R.drawable.exercise_placeholder
     }
 
 }
