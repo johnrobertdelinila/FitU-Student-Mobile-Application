@@ -390,8 +390,6 @@ class WorkOutFragment : Fragment(), MemoryManagement {
             // Stop triggering classification process
             cameraViewModel.triggerClassification.value = false
 
-            saveExerciseToFirestore(getString(R.string.noWorkoutResultDisplay), 0, currentTimer ?: "0")
-
             // Navigate to completed fragment
             Navigation.findNavController(requireView())
                 .navigate(R.id.action_workoutFragment_to_completedFragment)
@@ -546,9 +544,7 @@ class WorkOutFragment : Fragment(), MemoryManagement {
                                     synthesizeSpeech("Congratulation! all the planned exercise completed")
                                     isAllWorkoutFinished = true
                                     completeAllExercise.visibility = View.VISIBLE
-                                    
-                                    // Save to Firestore
-//                                    saveExerciseToFirestore()
+
                                 }, 5000)
                             }
                             // Update complete status for existing plan

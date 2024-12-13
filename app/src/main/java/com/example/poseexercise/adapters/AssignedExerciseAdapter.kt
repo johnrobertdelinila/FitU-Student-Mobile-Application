@@ -64,7 +64,7 @@ class AssignedExerciseAdapter(
 
     private fun getExerciseImage(exerciseName: String): Int {
         return when (exerciseName.lowercase()) {
-            "pushup" -> R.drawable.push_up
+            "push-up" -> R.drawable.push_up
             "squat" -> R.drawable.squat
             "sit-up" -> R.drawable.sit_ups
             "deadlift" -> R.drawable.dead_lift

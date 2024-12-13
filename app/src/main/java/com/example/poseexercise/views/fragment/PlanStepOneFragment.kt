@@ -22,6 +22,9 @@ import com.google.android.material.chip.ChipGroup
 class PlanStepOneFragment : Fragment(), MemoryManagement {
     private val exerciseList = Constants.getExerciseList()
     private var searchQuery: CharSequence? = null
+    private lateinit var adapter: ExerciseAdapter
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var chipGroup: ChipGroup
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -29,30 +32,55 @@ class PlanStepOneFragment : Fragment(), MemoryManagement {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_plan_step_one, container, false)
         val activity = activity as Context
-        // Get all the layout item
-        val recyclerView: RecyclerView = view.findViewById(R.id.recycler_view)
-        val levelGroup: ChipGroup = view.findViewById(R.id.chip_group)
-        val adapter = ExerciseAdapter(activity, findNavController(this))
+
+        // Initialize views
+        recyclerView = view.findViewById(R.id.recycler_view)
+        chipGroup = view.findViewById(R.id.chip_group)
+
+        // Setup adapter
+        adapter = ExerciseAdapter(activity, findNavController(this))
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = adapter
         adapter.setExercises(exerciseList)
 
-        // Set on click listener for chip
-        levelGroup.isSingleSelection = true
-        levelGroup.setOnCheckedStateChangeListener { chipGroup, _ ->
-            // Get the chip from the checked chip id
-            val checkedChipId = chipGroup.checkedChipId
-            val chip = chipGroup.findViewById<Chip>(checkedChipId)
-            // Filter the result based on the selected chip
-            if (chip != null) {
-                searchQuery = chip.text
-                adapter.filter.filter(searchQuery)
-            } else {
-                adapter.setExercises(exerciseList)
-            }
-        }
-        // Inflate the layout for this fragment
+        // Setup chip group
+        setupChipGroup()
+
         return view
+    }
+
+    private fun setupChipGroup() {
+        // Set initial state - "All" selected
+        chipGroup.check(R.id.chip_all)
+
+        chipGroup.setOnCheckedStateChangeListener { group, checkedIds ->
+            if (checkedIds.isEmpty()) {
+                // If nothing is selected, select "All"
+                group.check(R.id.chip_all)
+                return@setOnCheckedStateChangeListener
+            }
+
+            val checkedChipId = checkedIds.first()
+            val query = when (checkedChipId) {
+                R.id.chip_all -> "Intermidiate"
+                R.id.chip_strength -> "Beginner"
+                R.id.chip_yoga -> "Advance"
+                else -> ""
+            }
+
+            filterExercises(query)
+        }
+    }
+
+    private fun filterExercises(query: String) {
+        if (query.isEmpty()) {
+            adapter.setExercises(exerciseList)
+        } else {
+            val filteredList = exerciseList.filter { exercise ->
+                exercise.level.equals(query, ignoreCase = true)
+            }
+            adapter.setExercises(filteredList)
+        }
     }
 
     override fun clearMemory() {
@@ -63,5 +91,4 @@ class PlanStepOneFragment : Fragment(), MemoryManagement {
         clearMemory()
         super.onDestroy()
     }
-
 }
