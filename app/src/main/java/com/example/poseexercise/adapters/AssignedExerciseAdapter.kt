@@ -32,6 +32,7 @@ class AssignedExerciseAdapter(
                 "squat" -> R.drawable.squat
                 "sit-up" -> R.drawable.sit_ups
                 "deadlift" -> R.drawable.dead_lift
+                "dead lift" -> R.drawable.dead_lift
                 "chest press" -> R.drawable.chest_press
                 "shoulder press" -> R.drawable.shoulder_press
                 "lunges" -> R.drawable.reverse_lunges

@@ -178,17 +178,17 @@ class WorkOutFragment : Fragment(), MemoryManagement {
         savedInstanceState: Bundle?
     ): View {
         val view: View = inflater.inflate(R.layout.fragment_workout, container, false)
-        
+
         // Initialize Firebase
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
-        
+
         // Initialize SharedPreferences
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        
+
         // Record start time when view is created
         startTime = System.currentTimeMillis()
-        
+
         // Linking all button and controls
         cameraFlipFAB = view.findViewById(R.id.facing_switch)
         startButton = view.findViewById(R.id.button_start_exercise)
@@ -216,27 +216,27 @@ class WorkOutFragment : Fragment(), MemoryManagement {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         // Get the exercise details from MainActivity
         val exerciseName = MainActivity.currentExerciseName ?: "No exercise"
         val classRosterId = MainActivity.currentClassRosterId ?: ""
         val targetRepetitions = MainActivity.currentRepetitions
-        
+
         // Add logging to verify received values
         Log.d(TAG, "Received values - exerciseName: $exerciseName, repetitions: $targetRepetitions")
-        
+
         // Find the TextView that was previously used for level
         val assignedExerciseText = view.findViewById<TextView>(R.id.level_text)
         val assignedRepetitionsText = view.findViewById<TextView>(R.id.points_text)
-        
+
         // Update text with assigned exercise details
         assignedExerciseText.text = "Exercise: $exerciseName"
         assignedRepetitionsText.text = "Target: $targetRepetitions repetitions"
-        
+
         // Initialize exerciseLog
         exerciseLog = ExerciseLog()
         startTime = System.currentTimeMillis()
-        
+
         previewView = view.findViewById(R.id.preview_view)
         val gifContainer: FrameLayout = view.findViewById(R.id.gifContainer)
         graphicOverlay = view.findViewById(R.id.graphic_overlay)
@@ -247,19 +247,19 @@ class WorkOutFragment : Fragment(), MemoryManagement {
 
         // Initialize SharedPreferences
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        
+
         // Initialize UI elements
         pointsTextView = view.findViewById(R.id.points_text)
         levelTextView = view.findViewById(R.id.level_text)
-        
+
         // Set initial UI values (using the same values)
         levelTextView.text = "Exercise: $exerciseName"
         pointsTextView.text = "Target: $targetRepetitions repetitions"
-        
+
         // Initialize Firebase
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
-        
+
         // start exercise button
         startButton.setOnClickListener {
             startTime = System.currentTimeMillis()
@@ -306,7 +306,7 @@ class WorkOutFragment : Fragment(), MemoryManagement {
 
         buttonCompleteExercise.setOnClickListener {
             synthesizeSpeech("Workout Complete")
-            
+
             cameraViewModel.postureLiveData.value?.let {
                 for ((_, value) in it) {
                     if (value.repetition != 0) {
@@ -314,7 +314,7 @@ class WorkOutFragment : Fragment(), MemoryManagement {
                             // Calculate points and update user progress
                             val points = calculatePoints(value.postureType, value.repetition)
                             updateUserProgress(points)
-                            
+
                             // Save to Room database
                             val calorie = when (value.postureType) {
                                 sitUp.type -> sitUp.value / 10
@@ -389,8 +389,6 @@ class WorkOutFragment : Fragment(), MemoryManagement {
 
             // Stop triggering classification process
             cameraViewModel.triggerClassification.value = false
-
-//            saveExerciseToFirestore(getString(R.string.noWorkoutResultDisplay), 0, currentTimer ?: "0")
 
             // Navigate to completed fragment
             Navigation.findNavController(requireView())
@@ -546,9 +544,7 @@ class WorkOutFragment : Fragment(), MemoryManagement {
                                     synthesizeSpeech("Congratulation! all the planned exercise completed")
                                     isAllWorkoutFinished = true
                                     completeAllExercise.visibility = View.VISIBLE
-                                    
-                                    // Save to Firestore
-//                                    saveExerciseToFirestore()
+
                                 }, 5000)
                             }
                             // Update complete status for existing plan
@@ -1084,7 +1080,7 @@ class WorkOutFragment : Fragment(), MemoryManagement {
         MainActivity.currentClassRosterId = null
         MainActivity.currentRepetitions = 0
         MainActivity.currentExerciseAssignmentId = null
-        
+
         clearMemory()
         super.onDestroy()
     }
@@ -1138,26 +1134,26 @@ class WorkOutFragment : Fragment(), MemoryManagement {
         }
         return basePoints * repetitions
     }
-    
+
     private fun updateUserProgress(points: Int) {
         lifecycleScope.launch {
             resultViewModel.updatePoints(points)
-            
+
             val totalPoints = sharedPreferences.getInt("total_points", 0)
             val newLevel = (totalPoints / 1000) + 1
-            
+
             if (newLevel > currentLevel) {
                 currentLevel = newLevel
                 sharedPreferences.edit().putInt("current_level", currentLevel).apply()
                 showLevelUpAnimation()
             }
-            
+
             // Update UI
             pointsTextView.text = getString(R.string.points_earned, points)
             levelTextView.text = getString(R.string.current_level, currentLevel)
         }
     }
-    
+
     private fun showLevelUpAnimation() {
         // Empty or remove this function
     }
@@ -1167,7 +1163,7 @@ class WorkOutFragment : Fragment(), MemoryManagement {
         withContext(Dispatchers.IO) {
             val currentPoints = sharedPreferences.getInt("total_points", 0)
             val newPoints = currentPoints + points
-            
+
             sharedPreferences.edit().apply {
                 putInt("total_points", newPoints)
                 apply()
@@ -1209,7 +1205,7 @@ class WorkOutFragment : Fragment(), MemoryManagement {
             // Create a copy without the assignmentId for the nested collection
             val nestedPerformedExercise = performedExercise.toMutableMap()
             nestedPerformedExercise.remove("exerciseAssignmentId")
-            
+
             // Create document reference for nested collection
             val nestedDocRef = db.collection("exerciseAssignments")
                 .document(assignmentId)
@@ -1218,7 +1214,7 @@ class WorkOutFragment : Fragment(), MemoryManagement {
 
             // Add nested document to batch
             batch.set(nestedDocRef, nestedPerformedExercise)
-            
+
             Log.d(TAG, "Adding nested document for assignment ID: $assignmentId")
         } else {
             Log.d(TAG, "No assignment ID available, skipping nested document")

@@ -74,7 +74,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="4dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="1dp"
@@ -84,8 +84,8 @@
                     android:id="@+id/days_list"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minHeight="200dp"
-                    android:maxHeight="300dp"
+                    android:minHeight="340dp"
+                    android:maxHeight="400dp"
                     android:choiceMode="multipleChoice"
                     android:divider="@color/lightGray"
                     android:dividerHeight="1dp"
@@ -104,6 +104,10 @@
         android:textSize="16sp"
         android:backgroundTint="@color/primaryColor"
         android:textColor="@color/white"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp" />
 
 </LinearLayout>
 
