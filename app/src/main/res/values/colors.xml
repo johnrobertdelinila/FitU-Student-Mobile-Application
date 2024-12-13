@@ -5,13 +5,13 @@
     <color name="primaryColorDark">#388E3C</color>  <!-- Dark Green -->
     <color name="accentColor">#FFD700</color>  <!-- Yellow -->
     <color name="statusBarColor">#2196F3</color>  <!-- Material Blue -->
-    
+
     <!-- Common colors -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="textGray">#757575</color>
     <color name="backgroundFill">#FAFAFA</color>
-    
+
     <!-- Additional theme colors -->
     <color name="secondaryColor">#FFC107</color>  <!-- Amber/Yellow -->
     <color name="secondaryColorDark">#FFA000</color>  <!-- Dark Amber -->
@@ -22,9 +22,15 @@
     <color name="green">#4CAF50</color>
     <color name="gray">#757575</color>
     <color name="blueButton">#2196F3</color>
-    
+
     <!-- Confidence indicator colors -->
     <color name="orange">#FF9800</color>  <!-- Material Design Orange -->
     <color name="yellow">#FFEB3B</color>  <!-- Material Design Yellow -->
     <color name="lightGreen">#8BC34A</color>  <!-- Material Design Light Green -->
+
+    <!-- Exercise completion colors -->
+    <color name="completed_exercise_background">#F5F5F5</color>
+
+    <!-- New color -->
+    <color name="lightGray">#E0E0E0</color>
 </resources>

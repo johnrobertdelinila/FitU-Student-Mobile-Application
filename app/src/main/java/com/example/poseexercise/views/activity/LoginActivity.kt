@@ -19,6 +19,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.auth.FirebaseUser
+import com.google.android.material.card.MaterialCardView
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
@@ -59,6 +60,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.LoginTheme)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
@@ -75,7 +77,7 @@ class LoginActivity : AppCompatActivity() {
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
         // Set up sign-in button
-        findViewById<LinearLayout>(R.id.googleSignInButton).setOnClickListener {
+        findViewById<MaterialCardView>(R.id.googleSignInButton).setOnClickListener {
             signIn()
         }
     }

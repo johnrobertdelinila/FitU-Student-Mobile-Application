@@ -5,6 +5,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.poseexercise.R
+import com.example.poseexercise.data.exercise.AssignedExercise
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -89,4 +90,7 @@ class AssignedExerciseAdapter(
             return dateString // Return original string if parsing fails
         }
     }
+
+    // Add getter for exercises list
+    fun getExercises(): List<AssignedExercise>? = exercises
 } 
