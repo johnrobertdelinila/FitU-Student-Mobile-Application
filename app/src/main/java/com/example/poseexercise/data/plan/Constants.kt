@@ -28,24 +28,24 @@ object Constants {
                 caloriesPerRep = 2.0,
                 image = R.drawable.sit_ups
             ),
-            ExerciseType(
-                name = "Deadlift",
-                category = "Strength",
-                caloriesPerRep = 4.0,
-                image = R.drawable.dead_lift
-            ),
-            ExerciseType(
-                name = "Chest Press",
-                category = "Strength",
-                caloriesPerRep = 3.5,
-                image = R.drawable.chest_press
-            ),
-            ExerciseType(
-                name = "Shoulder Press",
-                category = "Strength",
-                caloriesPerRep = 3.0,
-                image = R.drawable.shoulder_press
-            ),
+//            ExerciseType(
+//                name = "Deadlift",
+//                category = "Strength",
+//                caloriesPerRep = 4.0,
+//                image = R.drawable.dead_lift
+//            ),
+//            ExerciseType(
+//                name = "Chest Press",
+//                category = "Strength",
+//                caloriesPerRep = 3.5,
+//                image = R.drawable.chest_press
+//            ),
+//            ExerciseType(
+//                name = "Shoulder Press",
+//                category = "Strength",
+//                caloriesPerRep = 3.0,
+//                image = R.drawable.shoulder_press
+//            ),
             ExerciseType(
                 name = "Lunges",
                 category = "Strength",
