@@ -1,41 +1,33 @@
 {
   "project_info": {
-    "project_number": "1044982367692",
-    "project_id": "fitu-7b023",
-    "storage_bucket": "fitu-7b023.firebasestorage.app"
+    "project_number": "3063968186",
+    "project_id": "fitu-95e76",
+    "storage_bucket": "fitu-95e76.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1044982367692:android:6701cfb9d4a499c9688969",
+        "mobilesdk_app_id": "1:3063968186:android:4a2d97d0c09ce88e17ad83",
         "android_client_info": {
           "package_name": "com.example.poseexercise"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1044982367692-rb2ad23bpvodpi5goijnldm4376itg69.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.poseexercise",
-            "certificate_hash": "c2a16c814f7adbd0cd529593f1fc91527bbd10c1"
-          }
-        },
-        {
-          "client_id": "1044982367692-i8n6juudmf6p1jrtcrcq7e8lof6oue8t.apps.googleusercontent.com",
+          "client_id": "3063968186-jiu8vgfurvmg9kv907de8bs5oucct8g9.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDz1P8DjZU99Cdz6YxmC7HeszpbmS2i80Q"
+          "current_key": "AIzaSyAoVOYW5fC-UVmOo3klOtzQ639X59cbvGU"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1044982367692-i8n6juudmf6p1jrtcrcq7e8lof6oue8t.apps.googleusercontent.com",
+              "client_id": "3063968186-jiu8vgfurvmg9kv907de8bs5oucct8g9.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
