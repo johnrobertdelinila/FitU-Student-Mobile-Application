@@ -22,21 +22,21 @@ object Constants {
                 name = "Lunge",
                 image = R.drawable.reverse_lunges,
                 calorie = 3.0,
-                level = "Beginner"
+                level = "Intermediate"
             ),
             Exercise(
                 id = 3,
                 name = "Squat",
                 image = R.drawable.squat,
                 calorie = 3.8,
-                level = "Beginner"
+                level = "Strength"
             ),
             Exercise(
                 id = 4,
                 name = "Sit up",
                 image = R.drawable.sit_ups,
                 calorie = 5.0,
-                level = "Advance"
+                level = "Strength"
             ),
 //            Exercise(
 //                id = 5,
@@ -59,6 +59,20 @@ object Constants {
 //                calorie = 9.0,
 //                level = "Advance"
 //            ),
+            Exercise(
+                id = 9,
+                name = "Warrior Yoga",
+                level = "Yoga",
+                calorie = 1.5,
+                image = R.drawable.warrior_yoga_pose
+            ),
+            Exercise(
+                id = 10,
+                name = "Tree Yoga",
+                level = "Yoga",
+                calorie = 1.0,
+                image = R.drawable.tree_yoga_pose
+            )
         )
     }
 }

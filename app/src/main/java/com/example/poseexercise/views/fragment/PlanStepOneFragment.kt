@@ -62,9 +62,9 @@ class PlanStepOneFragment : Fragment(), MemoryManagement {
 
             val checkedChipId = checkedIds.first()
             val query = when (checkedChipId) {
-                R.id.chip_all -> "Intermidiate"
-                R.id.chip_strength -> "Beginner"
-                R.id.chip_yoga -> "Advance"
+                R.id.chip_all -> "Intermediate"
+                R.id.chip_strength -> "Strength"
+                R.id.chip_yoga -> "Yoga"
                 else -> ""
             }
 
